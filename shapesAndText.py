@@ -14,6 +14,7 @@ Author(s): Melissa LeBlanc-Williams for Adafruit Industries
 
 import digitalio
 import board
+import time
 from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import ili9341
 from adafruit_rgb_display import st7789  # pylint: disable=unused-import
@@ -69,7 +70,7 @@ disp.image(image)
 font = ImageFont.truetype("ls /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", FONTSIZE)
 font_height=FONTSIZE
 while True:
-
+    start= time.time()
     # (font_width, font_height) = font.getsize(text)
     draw.text(
         (0, 0),
@@ -104,7 +105,8 @@ while True:
 
     # Display image.
     disp.image(image)
-
+    print(time.time()-start)
+    start = time.time()
     # Draw Some Text
 
     draw.text(
@@ -122,3 +124,4 @@ while True:
 
     # Display image.
     disp.image(image)
+    print(time.time()-start)
