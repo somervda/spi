@@ -10,14 +10,10 @@ GPIO.setup(PINUP, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(PINDOWN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(PINSELECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-
-
 # Import the SSD1306 module for OLED display on I2C.
 import adafruit_ssd1306
 # Create the I2C interface.
 i2c = busio.I2C(SCL, SDA)
-
-
 
 I2CWIDTH=128
 I2CHEIGHT=64
@@ -78,7 +74,7 @@ class Menu:
                 self.selectedItemIndex=+1
                 if self.selectedItemIndex>self.windowStartIndex+I2CWINDOWSIZE:
                     self.windowStartIndex=+1
-        if GPIO.input(PINDOWN):
+        if GPIO.input(PINSELECT):
             return(self.itemList[self.selectedItemIndex])
         return None
 
