@@ -1,6 +1,17 @@
 from board import SCL, SDA
 import busio
 import time
+import RPi.GPIO as GPIO
+# Set GPIO pins to read menu button values
+PINUP=16
+PINDOWN=20
+PINSELECT=21
+GPIO.setup(PINUP, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(PINDOWN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(PINSELECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+
+
 # Import the SSD1306 module for OLED display on I2C.
 import adafruit_ssd1306
 # Create the I2C interface.
@@ -41,15 +52,37 @@ class Menu:
         # and the initial window starts from the first item.
         self.selectedItemIndex = 0
         self.windowStartIndex=0
-        if self.isI2C:
-            self.displayMenuOnI2c(startAtItem)
-        else:
-            self.displayMenuOnTFT(startAtItem)
+        selectedItem = None
+        while selectedItem == None:
+            selectedItem=self.processButtonPress()
+            if selectedItem == None:
+                if self.isI2C:
+                    self.displayMenuOnI2c(startAtItem)
+                else:
+                    self.displayMenuOnTFT(startAtItem)
+            else:
+                return(selectedItem)
+            time.sleep(0.1)
 
     def processButtonPress():
         # Check to see if the up, down or select buttons are pressed, if up or down then change the 
         # relavant selectedItemIndex and windowStartIndex values and redisplay the menu. If the select 
         # button is pressed then return the menuItem selected.
+        if GPIO.input(PINUP):
+            if self.selectedItemIndex>0:
+                self.selectedItemIndex=-1
+                if self.selectedItemIndex<self.windowStartIndex:
+                    self.windowStartIndex=-1
+        if GPIO.input(PINDOWN):
+            if self.selectedItemIndex<len(self.itemList):
+                self.selectedItemIndex=+1
+                if self.selectedItemIndex>self.windowStartIndex+I2CWINDOWSIZE:
+                    self.windowStartIndex=+1
+        if GPIO.input(PINDOWN):
+            return(self.itemList[self.selectedItemIndex])
+        return None
+
+
         
     def displayMenuOnTFT(self):
         print("displayMenuOnTFT is not implemented")
