@@ -35,21 +35,33 @@ class Menu:
             self.windowSize = I2CWINDOWSIZE
             self.i2cDisplay = adafruit_ssd1306.SSD1306_I2C(self.width, self.height, i2c)
 
-    def showMenu(self):
+    def showMenu(self,startAtItem=0):
         # display menu on the selected device
+        # When the menu is first display it starts displaying from the firstItem in the itemList
+        # and the initial window starts from the first item.
+        self.selectedItemIndex = 0
+        self.windowStartIndex=0
         if self.isI2C:
-            self.displayMenuOnI2c()
+            self.displayMenuOnI2c(startAtItem)
         else:
-            self.displayMenuOnTFT()
+            self.displayMenuOnTFT(startAtItem)
+
+    def processButtonPress():
+        # Check to see if the up, down or select buttons are pressed, if up or down then change the 
+        # relavant selectedItemIndex and windowStartIndex values and redisplay the menu. If the select 
+        # button is pressed then return the menuItem selected.
         
     def displayMenuOnTFT(self):
         print("displayMenuOnTFT is not implemented")
 
-    def displayMenuOnI2c(self):
+    def displayMenuOnI2c(self,startAtItem):
         self.i2cDisplay.fill(0)
-        self.i2cDisplay.show()
-        for i,item in enumerate(self.itemList):
-            self.i2cDisplay.text("  " + str(i+1) + " " + item.name, 0, i * I2CFONTHEIGHT,1)
+        for index,item in enumerate(self.itemList[startAtItem:],start=startAtItem):
+            if index==self.selectedItemIndex:
+                selectionIndicator="> "
+            else:
+                selectionIndicator="  "
+            self.i2cDisplay.text(selectionIndicator +  item.name, 0, index * I2CFONTHEIGHT,1)
         self.i2cDisplay.show()
 
 

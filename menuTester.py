@@ -9,4 +9,4 @@ menuItems.append(MenuItem("Stars", "Polarus,Betelgeuse , Sirus etc", 0, 0, 0, 0)
 print(len(menuItems))
 
 topMenu= Menu(isI2C=True,itemList=menuItems)
-topMenu.showMenu()
+topMenu.showMenu(0)
