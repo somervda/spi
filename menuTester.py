@@ -17,4 +17,5 @@ menuItems.append(MenuItem("Giants", "Polarus,Betelgeuse , Sirus etc", 0, 0, 0, 0
 print(len(menuItems))
 
 topMenu= Menu(isI2C=True,itemList=menuItems)
-topMenu.showMenu(0)
+s=topMenu.showMenu()
+topMenu.displaySelectionOnI2c(s)
