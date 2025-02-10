@@ -69,7 +69,6 @@ class Menu:
         # relavant selectedItemIndex and windowStartIndex values and redisplay the menu. If the select 
         # button is pressed then return the menuItem selected.
         if GPIO.input(PINUP)==0:
-            print("UP", GPIO.input(PINUP))
             if self.selectedItemIndex>0:
                 self.selectedItemIndex-=1
                 if self.selectedItemIndex<self.windowStartIndex:
@@ -77,13 +76,10 @@ class Menu:
         if GPIO.input(PINDOWN)==0:
             print("Down")
             if self.selectedItemIndex<(len(self.itemList)-1):
-                print("Down Before: ",self.selectedItemIndex,self.windowStartIndex)
                 self.selectedItemIndex+=1
-                print("Down After: ",self.selectedItemIndex,self.windowStartIndex)
                 if self.selectedItemIndex>=self.windowStartIndex+I2CWINDOWSIZE:
                     self.windowStartIndex+=1
         if GPIO.input(PINSELECT)==0:
-            print("Select:",self.itemList[self.selectedItemIndex].name)
             return(self.itemList[self.selectedItemIndex])
         return None
 

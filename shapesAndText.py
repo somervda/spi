@@ -17,11 +17,11 @@ import board
 import time
 from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import ili9341
-from adafruit_rgb_display import st7789  # pylint: disable=unused-import
-from adafruit_rgb_display import hx8357  # pylint: disable=unused-import
-from adafruit_rgb_display import st7735  # pylint: disable=unused-import
-from adafruit_rgb_display import ssd1351  # pylint: disable=unused-import
-from adafruit_rgb_display import ssd1331  # pylint: disable=unused-import
+# from adafruit_rgb_display import st7789  # pylint: disable=unused-import
+# from adafruit_rgb_display import hx8357  # pylint: disable=unused-import
+# from adafruit_rgb_display import st7735  # pylint: disable=unused-import
+# from adafruit_rgb_display import ssd1351  # pylint: disable=unused-import
+# from adafruit_rgb_display import ssd1331  # pylint: disable=unused-import
 
 # First define some constants to allow easy resizing of shapes.
 BORDER = 20
