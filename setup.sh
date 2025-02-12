@@ -45,3 +45,5 @@ sudo apt-get install -y i2c-tools
 sudo usermod -a -G spi,gpio,i2c pi
 echo 4b. OLED Installing adafruit i2c and oled support
 pip3 install adafruit-circuitpython-ssd1306 --break-system-packages
+# Install luma oled libraries
+pip install --upgrade luma.oled  --break-system-packages

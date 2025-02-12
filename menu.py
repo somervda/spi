@@ -12,15 +12,61 @@ GPIO.setup(PINDOWN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(PINSELECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Import the SSD1306 module for OLED display on I2C.
-import adafruit_ssd1306
+# import adafruit_ssd1306
 # Create the I2C interface.
-i2c = busio.I2C(SCL, SDA)
+from luma.core.interface.serial import i2c, spi, pcf8574
+from luma.core.interface.parallel import bitbang_6800
+from luma.core.render import canvas
+from luma.oled.device import ssd1306, ssd1309, ssd1325, ssd1331, sh1106, ws0010
+
+# i2c = busio.I2C(SCL, SDA)
+ssdDisplay = i2c(port=1, address=0x3C)
+# substitute ssd1331(...) or sh1106(...) below if using that device
+# device = sh1106(serial)
+ssd1309Device = ssd1309(ssdDisplay)
+# See draw functions at https://pillow.readthedocs.io/en/latest/reference/ImageDraw.html#module-PIL.ImageDraw
+# draw=canvas(ssd1309Device)
+
 
 # ssd1306 I2C device parameters
 I2CWIDTH=128
 I2CHEIGHT=64
 I2CWINDOWSIZE=7
 I2CFONTHEIGHT=9
+
+# SPI display setup
+import digitalio
+import board
+import time
+from PIL import Image, ImageDraw, ImageFont
+from adafruit_rgb_display import ili9341
+
+FONTSIZE = 20
+TFTWINDOWSIZE=10
+
+
+# Configuration for CS and DC pins (these are PiTFT defaults):
+cs_pin = digitalio.DigitalInOut(board.CE0)
+dc_pin = digitalio.DigitalInOut(board.D25)
+reset_pin = digitalio.DigitalInOut(board.D24)
+
+# Config for display baudrate (default max is 24mhz):
+BAUDRATE = 24000000
+
+# Setup SPI bus using hardware SPI:
+spi = board.SPI()
+
+# disp = ili9341.ILI9341(
+#     spi,
+#     rotation=90,  # 2.2", 2.4", 2.8", 3.2" ILI9341
+#     cs=cs_pin,
+#     dc=dc_pin,
+#     rst=reset_pin,
+#     baudrate=BAUDRATE,
+# )
+
+
+
 
 
 class MenuItem():
@@ -42,7 +88,18 @@ class Menu:
             self.height = I2CHEIGHT
             self.width = I2CWIDTH
             self.windowSize = I2CWINDOWSIZE
-            self.i2cDisplay = adafruit_ssd1306.SSD1306_I2C(self.width, self.height, i2c)
+            # self.i2cDisplay = adafruit_ssd1306.SSD1306_I2C(self.width, self.height, i2c)
+        else:
+            self.height = disp.width  # we swap height/width to rotate it to landscape!
+            self.width = disp.height
+            self.windowSize= TFTWINDOWSIZE
+            # Make image and draw objects
+            self.image = Image.new("RGB", (self.width, self.height))
+            # Get drawing object to draw on image.
+            self.draw = ImageDraw.Draw(self.image)
+            # Load a TTF Font
+            self.font = ImageFont.truetype("ls /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", FONTSIZE)
+            self.font_height=FONTSIZE
 
     
 
@@ -53,16 +110,20 @@ class Menu:
         self.selectedItemIndex = 0
         self.windowStartIndex=0
         selectedItem = None
-        while selectedItem == None:
-            selectedItem=self.processButtonPress()
-            if selectedItem == None:
-                if self.isI2C:
-                    self.displayMenuOnI2c()
+        with canvas(ssd1309Device) as drawx:
+            # with canvas(ssd1309Device) as draw1:
+            #     draw1.text((0, 0), "Test it out", fill="white")
+            #     time.sleep(5)
+            while selectedItem == None:
+                selectedItem=self.processButtonPress()
+                if selectedItem == None:
+                    if self.isI2C:
+                        self.displayMenuOnI2c(drawx)
+                    else:
+                        self.displayMenuOnTFT()
                 else:
-                    self.displayMenuOnTFT()
-            else:
-                return(selectedItem)
-            time.sleep(0.1)
+                    return(selectedItem)
+                time.sleep(0.5)
 
     def processButtonPress(self):
         # Check to see if the up, down or select buttons are pressed, if up or down then change the 
@@ -77,7 +138,7 @@ class Menu:
             print("Down")
             if self.selectedItemIndex<(len(self.itemList)-1):
                 self.selectedItemIndex+=1
-                if self.selectedItemIndex>=self.windowStartIndex+I2CWINDOWSIZE:
+                if self.selectedItemIndex>=self.windowStartIndex+self.windowSize:
                     self.windowStartIndex+=1
         if GPIO.input(PINSELECT)==0:
             return(self.itemList[self.selectedItemIndex])
@@ -86,29 +147,64 @@ class Menu:
 
         
     def displayMenuOnTFT(self):
-        print("displayMenuOnTFT is not implemented")
+        print("displayMenuOnTFT: ",self.selectedItemIndex,self.windowStartIndex)
+        # Clear page
+        self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
+        # disp.image(self.image)
+        for index,item in enumerate(self.itemList[self.windowStartIndex:],start=self.windowStartIndex):
+            if index> (self.windowStartIndex + self.windowSize):
+                break
+            if index==self.selectedItemIndex:
+                self.draw.text((0, (index - self.windowStartIndex) * (FONTSIZE +1)),item.name,font=self.font,fill=(255, 255, 255))
+                # self.i2cDisplay.text(selectionIndicator +  item.name, 0, (index - self.windowStartIndex) * I2CFONTHEIGHT,1)
+            else:
+                self.draw.text((0, (index - self.windowStartIndex) * (FONTSIZE +1)),item.name,font=self.font,fill=(0, 255, 255))
+        # Display image.
+        disp.image(self.image)
+
+
 
     def displaySelectionOnI2c(self,selectedItem):
-        self.i2cDisplay.fill(0)
-        self.i2cDisplay.text(selectedItem.name,0,0,1)
-        self.i2cDisplay.show()
+        # self.i2cDisplay.fill(0)
+        # self.i2cDisplay.text(selectedItem.name,0,0,1)
+        # self.i2cDisplay.show()
+
+
+        with canvas(ssd1309Device) as drawy:
+            # draw.rectangle(ssd1309Device.bounding_box, outline="black", fill="black")
+            drawy.text((0, 0), selectedItem.name, fill="white")
+            time.sleep(3)
+
+
+
+    def displaySelectionOnTFT(self,selectedItem):
+        # Clear page
+        self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
+        disp.image(self.image)
+        self.draw.text((0, 0),selectedItem.name,font=self.font,fill=(255, 255, 255))
+        # Display image.
+        disp.image(self.image)
         time.sleep(3)
-        self.i2cDisplay.fill(0)
-        self.i2cDisplay.show()
+        self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
+        disp.image(self.image)
 
 
 
-
-    def displayMenuOnI2c(self):
+    def displayMenuOnI2c(self,drawx):
         print("displayMenuOnI2c: ",self.selectedItemIndex,self.windowStartIndex)
-        self.i2cDisplay.fill(0)
+        # with canvas(ssd1309Device) as draw1:
+        #     draw1.text((0, 0), "Hi", fill="white")
+        #     time.sleep(1)
+        # self.i2cDisplay.fill(0)
+        # draw.rectangle(ssd1309Device.bounding_box, outline="black", fill="black")
         for index,item in enumerate(self.itemList[self.windowStartIndex:],start=self.windowStartIndex):
             if index==self.selectedItemIndex:
                 selectionIndicator="> "
             else:
                 selectionIndicator="  "
-            self.i2cDisplay.text(selectionIndicator +  item.name, 0, (index - self.windowStartIndex) * I2CFONTHEIGHT,1)
-        self.i2cDisplay.show()
+            drawx.text((0, (index - self.windowStartIndex) * I2CFONTHEIGHT),selectionIndicator +  item.name, fill="white")
+            # self.i2cDisplay.text(selectionIndicator +  item.name, 0, (index - self.windowStartIndex) * I2CFONTHEIGHT,1)
+        # self.i2cDisplay.show()
 
 
 

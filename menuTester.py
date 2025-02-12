@@ -15,7 +15,10 @@ menuItems.append(MenuItem("Eagles", "The big dipper, orion etc", 0, 0, 0, 0))
 menuItems.append(MenuItem("Giants", "Polarus,Betelgeuse , Sirus etc", 0, 0, 0, 0))
 
 print(len(menuItems))
-
-topMenu= Menu(isI2C=True,itemList=menuItems)
+i2c=True
+topMenu= Menu(isI2C=i2c,itemList=menuItems)
 s=topMenu.showMenu()
-topMenu.displaySelectionOnI2c(s)
+if i2c:
+    topMenu.displaySelectionOnI2c(s)
+else:
+    topMenu.displaySelectionOnTFT(s)    

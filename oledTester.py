@@ -22,7 +22,7 @@ print(i2c.scan())
 #  128 * 64 ssd1309
 display = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
 # display.poweron()
-# display.contrast(255)
+# display.contrast(1)
 # Alternatively you can change the I2C address of the device with an addr parameter:
 #display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c, addr=0x31)
 

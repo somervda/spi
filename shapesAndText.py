@@ -50,6 +50,7 @@ disp = ili9341.ILI9341(
 
 # Create blank image for drawing.
 # Make sure to create image with mode 'RGB' for full color.
+print("rotation:",disp.rotation % 180 )
 if disp.rotation % 180 == 90:
     height = disp.width  # we swap height/width to rotate it to landscape!
     width = disp.height
