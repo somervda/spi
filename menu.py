@@ -88,6 +88,10 @@ class Menu:
             self.height = I2CHEIGHT
             self.width = I2CWIDTH
             self.windowSize = I2CWINDOWSIZE
+            self.background = Image.new(ssd1309Device.mode, ssd1309Device.size, "black")
+            self.draw = ImageDraw.Draw(self.background)
+            self.draw.text((0, 0), "Go Eagles", fill="white")
+            ssd1309Device.display(self.background)
             # self.i2cDisplay = adafruit_ssd1306.SSD1306_I2C(self.width, self.height, i2c)
         else:
             self.height = disp.width  # we swap height/width to rotate it to landscape!
@@ -110,20 +114,17 @@ class Menu:
         self.selectedItemIndex = 0
         self.windowStartIndex=0
         selectedItem = None
-        with canvas(ssd1309Device) as drawx:
-            # with canvas(ssd1309Device) as draw1:
-            #     draw1.text((0, 0), "Test it out", fill="white")
-            #     time.sleep(5)
-            while selectedItem == None:
-                selectedItem=self.processButtonPress()
-                if selectedItem == None:
-                    if self.isI2C:
-                        self.displayMenuOnI2c(drawx)
-                    else:
-                        self.displayMenuOnTFT()
+        while selectedItem == None:
+            selectedItem=self.processButtonPress()
+            if selectedItem == None:
+                if self.isI2C:
+                    self.displayMenuOnI2c()
                 else:
-                    return(selectedItem)
-                time.sleep(0.5)
+                    self.displayMenuOnTFT()
+            else:
+                return(selectedItem)
+            # time.sleep(0.1)
+
 
     def processButtonPress(self):
         # Check to see if the up, down or select buttons are pressed, if up or down then change the 
@@ -165,15 +166,11 @@ class Menu:
 
 
     def displaySelectionOnI2c(self,selectedItem):
-        # self.i2cDisplay.fill(0)
-        # self.i2cDisplay.text(selectedItem.name,0,0,1)
-        # self.i2cDisplay.show()
-
-
-        with canvas(ssd1309Device) as drawy:
-            # draw.rectangle(ssd1309Device.bounding_box, outline="black", fill="black")
-            drawy.text((0, 0), selectedItem.name, fill="white")
-            time.sleep(3)
+        print("selected:",selectedItem.name)
+        self.draw.rectangle(ssd1309Device.bounding_box, outline="black", fill="black")
+        self.draw.text((0, 0), selectedItem.name, fill="white")
+        ssd1309Device.display(self.background)
+        time.sleep(3)
 
 
 
@@ -190,21 +187,25 @@ class Menu:
 
 
 
-    def displayMenuOnI2c(self,drawx):
+    def displayMenuOnI2c(self):
         print("displayMenuOnI2c: ",self.selectedItemIndex,self.windowStartIndex)
         # with canvas(ssd1309Device) as draw1:
         #     draw1.text((0, 0), "Hi", fill="white")
         #     time.sleep(1)
         # self.i2cDisplay.fill(0)
-        # draw.rectangle(ssd1309Device.bounding_box, outline="black", fill="black")
+        self.draw.rectangle(ssd1309Device.bounding_box, outline="black", fill="black")
+        # with canvas(ssd1309Device) as draw1:
+        # print(drawx,draw1)
         for index,item in enumerate(self.itemList[self.windowStartIndex:],start=self.windowStartIndex):
             if index==self.selectedItemIndex:
                 selectionIndicator="> "
             else:
                 selectionIndicator="  "
-            drawx.text((0, (index - self.windowStartIndex) * I2CFONTHEIGHT),selectionIndicator +  item.name, fill="white")
+            self.draw.text((0, (index - self.windowStartIndex) * I2CFONTHEIGHT),selectionIndicator +  item.name, fill="white")
+            # draw1.text((0, 0), "Hi", fill="white")
             # self.i2cDisplay.text(selectionIndicator +  item.name, 0, (index - self.windowStartIndex) * I2CFONTHEIGHT,1)
         # self.i2cDisplay.show()
+        ssd1309Device.display(self.background)
 
 
 
